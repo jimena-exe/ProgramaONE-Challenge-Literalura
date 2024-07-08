@@ -1,21 +1,24 @@
 package literalura.challenge.model;
 
+import jakarta.persistence.*;
+
 import java.util.Collections;
 import java.util.List;
 
+@Entity
+@Table(name="libros")
 public class Libro {
 
     //----- variables
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String titulo;
-//    @ManyToOne(cascade = CascadeType.ALL)
-//    @JoinColumn(name = "autor_id")
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "autor_id")
     private Autor autor;
-//    @Enumerated (EnumType.STRING)
     private List<String> idioma;
-    private Integer numeroDescargas;
+    private Integer numeroDeDescargas;
 
     //restablece el constructor predeterminado
     public Libro(){
@@ -26,10 +29,8 @@ public class Libro {
         this.titulo = datosLibros.titulo();
         this.autor = new Autor(datosLibros.autores().get(0)); //traerá el primero
         this.idioma = datosLibros.idioma(); //get(0)
-        this.numeroDescargas = datosLibros.numeroDeDescargas() != null ? datosLibros.numeroDeDescargas() : 0;
+        this.numeroDeDescargas = datosLibros.numeroDeDescargas() != null ? datosLibros.numeroDeDescargas() : 0;
     }
-
-
 
     //----- Getters y setters
     public Long getId() {
@@ -60,23 +61,24 @@ public class Libro {
         this.idioma = idioma;
     }
 
-    public Integer getNumeroDescargas() {
-        return numeroDescargas;
+    public Integer getNumeroDeDescargas() {
+        return numeroDeDescargas;
     }
-    public void setNumeroDescargas(Integer numeroDescargas) {
-        this.numeroDescargas = numeroDescargas;
+    public void setNumeroDeDescargas(Integer numeroDeDescargas) {
+        this.numeroDeDescargas = numeroDeDescargas;
     }
 
     //----- ToString
     @Override
     public String toString() {
         String mensaje = String.format("""
-                +++++ Libro +++++
+                ++++++++ Libro ++++++++
                 Titulo: %s
                 Autor: %s
                 Idioma: %s
                 Número de descargas: %s
-                """, titulo, autor,idioma,numeroDescargas);
+                ++++++++++++++++++++++++
+                """, titulo, autor,idioma,numeroDeDescargas);
         return mensaje;
     }
 }

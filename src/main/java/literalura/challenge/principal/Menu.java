@@ -2,13 +2,21 @@ package literalura.challenge.principal;
 
 import literalura.challenge.model.DatosGenerales;
 import literalura.challenge.model.DatosLibros;
+import literalura.challenge.model.Libro;
+//import literalura.challenge.repository.LibrosRepository;
 import literalura.challenge.service.ConsumoAPI;
 import literalura.challenge.service.ConvierteDatos;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
 public class Menu {
+
+    //Inyección de dependencias
+//    @Autowired
+//    private LibrosRepository librosRepository;
 
     //variables
     private Scanner teclado = new Scanner(System.in);
@@ -72,7 +80,7 @@ public class Menu {
 
     }
 
-    //Traer libros por título
+    //Traer libros por título de la API  ------ FALTA GUARDAR CADA LIBRO EN EL REPO
     public void mostrarLibroPorTitulo(){
         System.out.println("Ingresa el nombre del libro que deseas encontrar: ");
         var tituloLibro = teclado.nextLine();
@@ -88,8 +96,18 @@ public class Menu {
 
         if(libroBuscado.isPresent()){
             DatosLibros datosLibros = libroBuscado.get();
+
+            //crea objeto del tipo Libro
+            Libro libro = new Libro(datosLibros);
+
+            //imprimir datos del libro
             System.out.println("Libro Encontrado ");;
             System.out.println(datosLibros);
+
+            //Guardar libro en la BD
+//            librosRepository.save(libro);
+            System.out.println("Libro guardado en la Base de datos.");
+
         }else {
             System.out.println("Libro no encontrado");
         }
@@ -117,5 +135,14 @@ public class Menu {
 
         System.out.println(datosBusqueda);
     }
+
+    //Traer los libros registrados en la BD
+//    private void mostrarLibrosRegistrados() {
+//        // Recuperar los libros almacenados en la base de datos y almacenarlos en la lista libros
+//        List<Libro> libros = librosRepository.findAll();
+//        libros.forEach(System.out::println);
+//    }
+
+
 
 }
