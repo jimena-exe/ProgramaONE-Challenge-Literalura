@@ -1,16 +1,19 @@
 package literalura.challenge.principal;
 
+import literalura.challenge.model.Autor;
 import literalura.challenge.model.DatosGenerales;
 import literalura.challenge.model.DatosLibros;
 import literalura.challenge.model.Libro;
+import literalura.challenge.repository.AutorRepository;
 import literalura.challenge.repository.LibrosRepository;
 import literalura.challenge.service.ConsumoAPI;
 import literalura.challenge.service.ConvierteDatos;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class Menu {
 
@@ -22,10 +25,15 @@ public class Menu {
     private LibrosRepository repositorioLibros;
     private Optional<Libro> libroBuscado;
 
+    private AutorRepository repositorioAutores;
 
-    public Menu(LibrosRepository repository){
+
+    public Menu(LibrosRepository repository, AutorRepository autorRepository){
+        //, AutorRepository autorRepository
         this.repositorioLibros = repository;
+        this.repositorioAutores = autorRepository;
     }
+
 
     //método para mostrar el menú
     public void mostrarMenu(){
@@ -59,8 +67,8 @@ public class Menu {
                 break;
                 case 4: mostrarLibrosRegistrados();
                 break;
-//                case 5: mostrarLosAutoresRegistrados();
-//                break;
+                case 5: mostrarLosAutoresRegistrados();
+                break;
 //                case 6: mostrarAutoresVivosPorAnio();
 //                break;
                 case 7: mostrarTodosLosLibros();
@@ -164,10 +172,16 @@ public class Menu {
 
     //Traer todos los libros registrados en la BD
     public void mostrarLibrosRegistrados(){
-
         // Recuperar los libros almacenados en la base de datos y almacenarlos en la lista libros
         List<Libro> libros = repositorioLibros.findAll();
         libros.forEach(System.out::println);
+
+    }
+
+    //Traer autores registrados  --- FALLA
+    public void mostrarLosAutoresRegistrados(){
+        List<Autor> autores = repositorioAutores.findAll();
+        autores.forEach(System.out::println);
 
     }
 
