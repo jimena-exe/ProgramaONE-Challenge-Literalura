@@ -1,5 +1,6 @@
 package literalura.challenge.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.util.Collections;
@@ -13,6 +14,7 @@ public class Libro {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(unique = true)
     private String titulo;
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "autor_id")
@@ -78,7 +80,7 @@ public class Libro {
                 Idioma: %s
                 Número de descargas: %s
                 ++++++++++++++++++++++++
-                """, titulo, autor,idioma,numeroDeDescargas);
+                """, titulo, autor.getNombre(),idioma,numeroDeDescargas);
         return mensaje;
     }
 }

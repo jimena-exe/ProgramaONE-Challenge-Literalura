@@ -3,7 +3,7 @@ package literalura.challenge.principal;
 import literalura.challenge.model.DatosGenerales;
 import literalura.challenge.model.DatosLibros;
 import literalura.challenge.model.Libro;
-//import literalura.challenge.repository.LibrosRepository;
+import literalura.challenge.repository.LibrosRepository;
 import literalura.challenge.service.ConsumoAPI;
 import literalura.challenge.service.ConvierteDatos;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,16 +14,18 @@ import java.util.Scanner;
 
 public class Menu {
 
-    //Inyección de dependencias
-//    @Autowired
-//    private LibrosRepository librosRepository;
-
     //variables
     private Scanner teclado = new Scanner(System.in);
     public final String URL_BASE = "https://gutendex.com/books/";
     private ConsumoAPI consumoAPI = new ConsumoAPI();
     private ConvierteDatos conversor = new ConvierteDatos();
+    private LibrosRepository repositorioLibros;
+    private Optional<Libro> libroBuscado;
 
+
+    public Menu(LibrosRepository repository){
+        this.repositorioLibros = repository;
+    }
 
     //método para mostrar el menú
     public void mostrarMenu(){
@@ -32,11 +34,12 @@ public class Menu {
 
             System.out.println("\n++++ Elija una de las opciones del menú ++++");
             String menu = """
-                1~ Buscar libro por título.
-                2~ Quiero listar los libros por idioma.
-                3~ Quiero listar los libros registrados.
-                4~ Quiero listar los autores registrados.
-                5~ Quiero listar los autores vivos en un determinado año.
+                1~ Buscar libros en la web.
+                2~ Buscar libro por título.
+                3~ Quiero listar los libros por idioma.
+                4~ Quiero listar los libros registrados.
+                5~ Quiero listar los autores registrados.
+                6~ Quiero listar los autores vivos en un determinado año.
                 
                 6. TODOS LOS LIBROS
                 
@@ -48,17 +51,19 @@ public class Menu {
             teclado.nextLine();
 
             switch (opcion){
-                case 1: mostrarLibroPorTitulo();
-                    break;
-                case 2: mostrarLibrosPorIdioma();
+                case 1: getLibroPorTitulo();
                 break;
-//                case 3: mostrarLibrosRegistrados();
+                case 2: mostrarLibroPorTitulo();
+                    break;
+                case 3: mostrarLibrosPorIdioma();
+                break;
+                case 4: mostrarLibrosRegistrados();
+                break;
+//                case 5: mostrarLosAutoresRegistrados();
 //                break;
-//                case 4: mostrarLosAutoresRegistrados();
+//                case 6: mostrarAutoresVivosPorAnio();
 //                break;
-//                case 5: mostrarAutoresVivosPorAnio();
-//                break;
-                case 6: mostrarTodosLosLibros();
+                case 7: mostrarTodosLosLibros();
                 break;
                 case 0:
                     System.out.println("Cerrando la aplicación de la Biblioteca...");
@@ -72,6 +77,7 @@ public class Menu {
 
     }
 
+    //mostrar todos los datos = Consumo inicial de API
     public void mostrarTodosLosLibros(){
         var json = consumoAPI.obtenerDatos(URL_BASE);
         System.out.println(json);
@@ -80,69 +86,90 @@ public class Menu {
 
     }
 
-    //Traer libros por título de la API  ------ FALTA GUARDAR CADA LIBRO EN EL REPO
-    public void mostrarLibroPorTitulo(){
+    //Traer libros por título de la API, buscar serie web ------ FALTA GUARDAR CADA LIBRO EN EL REPO
+    public void getLibroPorTitulo(){
         System.out.println("Ingresa el nombre del libro que deseas encontrar: ");
         var tituloLibro = teclado.nextLine();
         String json = consumoAPI.obtenerDatos(URL_BASE+"?search=" + tituloLibro.replace(" ","+"));
 
-        //Convertir el Json en un objeto
-        DatosGenerales datosGenerales = conversor.obtenerDatos(json,DatosGenerales.class);
 
-        //Busca el libro con el título
-        Optional<DatosLibros> libroBuscado = datosGenerales.resultados().stream()
-                .filter(l -> l.titulo().toUpperCase().contains(tituloLibro.toUpperCase()))
-                .findFirst();
+        try{
+            //Convertir el Json en un objeto
+            DatosGenerales datosGenerales = conversor.obtenerDatos(json,DatosGenerales.class);
 
-        if(libroBuscado.isPresent()){
-            DatosLibros datosLibros = libroBuscado.get();
+            //Busca el libro con el título
+            Optional<DatosLibros> libroBuscado = datosGenerales.resultados().stream()
+                    .filter(l -> l.titulo().toUpperCase().contains(tituloLibro.toUpperCase()))
+                    .findFirst();
 
-            //crea objeto del tipo Libro
-            Libro libro = new Libro(datosLibros);
+            if(libroBuscado.isPresent()){
+                DatosLibros datosLibros = libroBuscado.get();
 
-            //imprimir datos del libro
-            System.out.println("Libro Encontrado ");;
-            System.out.println(datosLibros);
+                //crea objeto del tipo Libro
+                Libro libro = new Libro(datosLibros);
 
-            //Guardar libro en la BD
-//            librosRepository.save(libro);
-            System.out.println("Libro guardado en la Base de datos.");
+                //imprimir datos del libro
+                System.out.println("Libro Encontrado ");
+                System.out.println(libro.toString());
+//            System.out.println(datosLibros);
 
+                //Guardar libro en la BD
+                repositorioLibros.save(libro);
+                System.out.println("Libro guardado en la Base de datos.");
+
+            }else {
+                System.out.println("Libro no encontrado");
+            }
+
+        }catch (Exception e){
+            System.out.println("--- Ha ocurrido un ERROR ---" + e.getMessage());
+        }
+
+
+    }
+
+    //Mostrar libros por título guardado en la BD
+    public void mostrarLibroPorTitulo(){
+        System.out.println("\nEscribe el nombre del libro que deseas buscar en nuestro repositorio de Libros: ");
+        var nombreLibro = teclado.nextLine();
+        libroBuscado = repositorioLibros.findByTituloContainingIgnoreCase(nombreLibro);
+
+        if (libroBuscado.isPresent()) {
+            System.out.println("El libro buscado es: \n"+ libroBuscado.get());
         }else {
             System.out.println("Libro no encontrado");
         }
 
-        //Falta convertir a objeto para la clase y llevar a BD
-
     }
 
-    //Traer libros por idioma
+    //Traer libros por idioma  ---- ARREGLAR VISTA DE NOMBRE DE AUTOR
     public void mostrarLibrosPorIdioma(){
         System.out.println("""
-                \n
-                ¿En qué idioma deseas buscar los libros?
-                 1. Espcribe "es" para Español
-                 2. Escribre "en" para Inglés
+                \n¿En qué idioma deseas buscar los libros?
+                 1. Escribe "es" para Español
+                 2. Escribe "en" para Inglés
                  3. Escribe "fr" para Francés
-                 4. Escribre "it" para Italiano""");
+                 4. Escribe "it" para Italiano""");
 
         System.out.print("\nEscibre tu opción aquí: ");
         var idiomaSeleccionado = teclado.nextLine();
 
         //API
-        var json = consumoAPI.obtenerDatos(URL_BASE+"/?languages=" + idiomaSeleccionado.replace(" ","+"));
+        String json = consumoAPI.obtenerDatos(URL_BASE+"/?languages=" + idiomaSeleccionado.replace(" ","+"));
         var datosBusqueda = conversor.obtenerDatos(json, DatosGenerales.class);
 
-        System.out.println(datosBusqueda);
+        System.out.println(datosBusqueda.resultados());
+
     }
 
-    //Traer los libros registrados en la BD
-//    private void mostrarLibrosRegistrados() {
-//        // Recuperar los libros almacenados en la base de datos y almacenarlos en la lista libros
-//        List<Libro> libros = librosRepository.findAll();
-//        libros.forEach(System.out::println);
-//    }
+    //Traer todos los libros registrados en la BD
+    public void mostrarLibrosRegistrados(){
 
+        // Recuperar los libros almacenados en la base de datos y almacenarlos en la lista libros
+        List<Libro> libros = repositorioLibros.findAll();
+        libros.forEach(System.out::println);
+
+    }
 
 
 }
