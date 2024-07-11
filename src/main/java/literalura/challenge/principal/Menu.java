@@ -18,11 +18,11 @@ import java.util.stream.Collectors;
 public class Menu {
 
     //variables
-    private Scanner teclado = new Scanner(System.in);
+    private final Scanner teclado = new Scanner(System.in);
     public final String URL_BASE = "https://gutendex.com/books/";
-    private ConsumoAPI consumoAPI = new ConsumoAPI();
-    private ConvierteDatos conversor = new ConvierteDatos();
-    private LibrosRepository repositorioLibros;
+    private final ConsumoAPI consumoAPI = new ConsumoAPI();
+    private final ConvierteDatos conversor = new ConvierteDatos();
+    private final LibrosRepository repositorioLibros;
     private Optional<Libro> libroBuscado;
 
     private AutorRepository repositorioAutores;
@@ -69,8 +69,8 @@ public class Menu {
                 break;
                 case 5: mostrarLosAutoresRegistrados();
                 break;
-//                case 6: mostrarAutoresVivosPorAnio();
-//                break;
+                case 6: mostrarAutoresVivosPorAnio();
+                break;
                 case 7: mostrarTodosLosLibros();
                 break;
                 case 0:
@@ -183,6 +183,33 @@ public class Menu {
         List<Autor> autores = repositorioAutores.findAll();
         autores.forEach(System.out::println);
 
+    }
+
+    //Traer autores vivos en determinado año
+    //primero ver si está vivo ese año
+    //traerlo si sí
+
+    public List<Autor> getAutorVivoEnCiertoAnio(int anioIngresado){
+        return repositorioAutores.findAll().stream()
+                .filter(a -> a.getFechaDeNacimiento() != null && a.getFechaDeNacimiento() < anioIngresado)
+                .filter(a -> a.getFechaDeNacimiento() == null || a.getFechaDeFallecimiento() >= anioIngresado)
+                .collect(Collectors.toList());
+    }
+
+    public void mostrarAutoresVivosPorAnio(){
+        System.out.println("Ingresa el año en el que te interesa encontrar autores vivos :D : ");
+        int anioIngresado = teclado.nextInt();
+
+        List<Autor> autoresVivos = getAutorVivoEnCiertoAnio(anioIngresado);
+
+        if (autoresVivos.isEmpty()) {
+            System.out.println("No hay autores vivos registrados en ese año.");
+
+        }else {
+            System.out.println("Autores vivos en el año " + anioIngresado);
+            autoresVivos.forEach(System.out::println);
+
+        }
     }
 
 
